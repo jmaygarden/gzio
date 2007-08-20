@@ -22,8 +22,8 @@ GZIO_V=0.9.0
 GZIO_SO=	gzio.$(EXT).$(GZIO_V)
 GZIO_O= lgziolib.o
 
-ALL_O= test.o $(GZIO_O)
-ALL_T= test $(GZIO_SO)
+ALL_O= $(GZIO_O)
+ALL_T= $(GZIO_SO)
 ALL_A= $(GZIO_SO)
 
 default: all
@@ -36,9 +36,6 @@ a:	$(ALL_A)
 
 $(GZIO_SO): $(GZIO_O)
 	$(LD) $(LDFLAGS) -o $@ $? $(LIBS)
-
-test: test.o
-	$(CC) $(CFLAGS) -g -o $@ $? $(LIBS) -ldl
 
 tags:
 	ctags lgziolib.c
@@ -66,6 +63,5 @@ echo:
 # DO NOT DELETE
 
 lgziolib.o: lgziolib.c lgziolib.h
-test.o: test.c lgziolib.h
 
 # (end of Makefile)
