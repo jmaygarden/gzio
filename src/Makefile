@@ -65,7 +65,7 @@ echo:
 
 # DO NOT DELETE
 
-lgziolib.o: lgziolib.c
-test.o: test.c
+lgziolib.o: lgziolib.c lgziolib.h
+test.o: test.c lgziolib.h
 
 # (end of Makefile)

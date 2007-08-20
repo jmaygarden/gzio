@@ -1,6 +1,8 @@
 /*
  * gzip file I/O library
  *
+ * Copyright (C) 2007 Judge Maygarden
+ *
  * This file was created by Judge Maygarden (jmaygarden at computer dot org)
  * through trivial changes to the "liolib.c" file from Lua 5.1.2. It was
  * inspired by a post from David Burgess on the official Lua mailing list
@@ -36,10 +38,7 @@
 #include <string.h>
 #include <zlib.h>
 
-#define lgziolib_c
-#define LUA_LIB
-
-#include "lua.h"
+#include "lgziolib.h"
 
 #include "lauxlib.h"
 #include "lualib.h"
@@ -321,14 +320,14 @@ static int read_line (lua_State *L, gzFile f) {
 
 
 static int read_chars (lua_State *L, gzFile f, size_t n) {
-  size_t rlen;  /* how much to read */
-  size_t nr;  /* number of chars actually read */
+  unsigned rlen;  /* how much to read */
+  int nr;  /* number of chars actually read */
   luaL_Buffer b;
   luaL_buffinit(L, &b);
   rlen = LUAL_BUFFERSIZE;  /* try to read that much each time */
   do {
     char *p = luaL_prepbuffer(&b);
-    if (rlen > n) rlen = n;  /* cannot read more than asked */
+    if (rlen > n) rlen = (unsigned) n;  /* cannot read more than asked */
     nr = gzread(f, p, rlen);
     luaL_addsize(&b, nr);
     n -= nr;  /* still have to read `n' chars */
@@ -434,7 +433,7 @@ static int g_write (lua_State *L, gzFile f, int arg) {
     else {
       size_t l;
       const char *s = luaL_checklstring(L, arg, &l);
-      status = status && (gzwrite(f, s, l) == l);
+      status = status && (gzwrite(f, s, (unsigned) l) == l);
     }
   }
   return pushresult(L, status, NULL);
@@ -539,17 +538,32 @@ static void createstdfile (lua_State *L, gzFile f, int k, const char *fname) {
 }
 
 
-LUALIB_API int luaopen_gzio (lua_State *L) {
+GZIO_API int luaopen_gzio (lua_State *L) {
   createmeta(L);
+
   /* create (private) environment (with fields IO_INPUT, IO_OUTPUT, __close) */
   lua_createtable(L, 2, 1);
   lua_replace(L, LUA_ENVIRONINDEX);
+
   /* open library */
   luaL_register(L, LUA_GZIOLIBNAME, iolib);
+
+  /* add module metadata */
+  lua_pushliteral (L, "_COPYRIGHT");
+  lua_pushliteral (L, "Copyright (C) 2007 Judge Maygarden");
+  lua_settable (L, -3);
+  lua_pushliteral (L, "_DESCRIPTION");
+  lua_pushliteral (L, "Lua gzip file I/O module");
+  lua_settable (L, -3);
+  lua_pushliteral (L, "_VERSION");
+  lua_pushliteral (L, "gzio 0.9.0");
+  lua_settable (L, -3);
+
   /* create (and set) default files */
   createstdfile(L, stdin, IO_INPUT, "stdin");
   createstdfile(L, stdout, IO_OUTPUT, "stdout");
   createstdfile(L, stderr, 0, "stderr");
+
   /* create environment for 'popen' */
   lua_getfield(L, -1, "popen");
   lua_createtable(L, 0, 1);
@@ -557,9 +571,11 @@ LUALIB_API int luaopen_gzio (lua_State *L) {
   lua_setfield(L, -2, "__close");
   lua_setfenv(L, -2);
   lua_pop(L, 1);  /* pop 'popen' */
+
   /* set default close function */
   lua_pushcfunction(L, io_fclose);
   lua_setfield(L, LUA_ENVIRONINDEX, "__close");
+
   return 1;
 }
 
