@@ -37,7 +37,7 @@ end
 -----------------------------------------------------------------------------
 function TarInternalFile:lines()
 	return function(s, var)
-		return s.archive.file:read("*l")
+		return self:read("*l")
 	end, self, nil
 end
 
@@ -52,21 +52,31 @@ end
 -----------------------------------------------------------------------------
 function TarInternalFile:read(...)
 	local eof = self.offset + self.size
-	if self.pointer > eof then return nil end -- eof
+	if self.pointer >= eof then return nil end -- eof
 	local t = {}
 	self.archive.file:seek("set", self.pointer)
-	for _, v in ipairs{...} do
-		local s = self.archive.file:read(v)
+	for i, v in ipairs{...} do
+		local s
+		if "*a" == v then
+			s = self.archive.file:read(eof - self.pointer)
+		elseif "*l" == v or "*n" == v or "number" == type(v) then
+			s = self.archive.file:read(v)
+		else
+			error('bad argument %d to %s (%s)', i
+				'TarInternalFile:read', 'invalid format')
+			return nil
+		end
 		local last = self.pointer
 		self.pointer = self.archive.file:seek()
-		if s and self.pointer > eof then
+		if s and self.pointer < eof then
+			table.insert(t, s)
+		elseif s then
 			table.insert(t, string.sub(s, 1, eof - last - 1))
 			self.pointer = self.offset + self.size
 			break
 		else
-			table.insert(t, s)
+			break
 		end
-		if not s then break end
 	end
 	return unpack(t)
 end
@@ -141,9 +151,10 @@ function TarFile:open(filename)
 	if not self.list[filename] then return nil end
 	local file = {}
 	file.archive = self
+	file.filename = filename
 	file.offset = self.list[filename].offset
-	file.size = self.list[filename].size
 	file.pointer = file.offset
+	file.size = self.list[filename].size
 	setmetatable(file, TarInternalFile)
 	return file
 end
@@ -230,6 +241,7 @@ public.open = function(file)
 	local archive = {}
 	archive.file = file
 	archive.list = {}
+	local p = file:seek("set")
 	while true do
 		local block = file:read(512)
 		if not block or not string.match(block, "[^%z]") then break end
@@ -240,7 +252,7 @@ public.open = function(file)
 				["size"] = header.size
 			}
 		end
-		file:seek("cur", 512 * math.ceil(header.size / 512))
+		local p = file:seek("cur", 512 * math.ceil(header.size / 512))
 	end
 	setmetatable(archive, TarFile)
 	return archive
