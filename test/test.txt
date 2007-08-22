@@ -1,4 +1,4 @@
-The is test data for the Lua gzip file I/O module.
+This is test data for the Lua gzip file I/O module.
 1
 2
 3

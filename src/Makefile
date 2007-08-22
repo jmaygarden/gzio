@@ -37,8 +37,9 @@ a:	$(ALL_A)
 $(GZIO_SO): $(GZIO_O)
 	$(LD) $(LDFLAGS) -o $@ $? $(LIBS)
 
-tags:
-	ctags lgziolib.c
+TAG_FILES = lgziolib.c lgziolib.h
+tags: $(TAG_FILES)
+	ctags $(TAG_FILES)
 
 clean:
 	$(RM) $(ALL_T) $(ALL_O) tags

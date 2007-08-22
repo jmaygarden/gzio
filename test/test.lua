@@ -1,38 +1,41 @@
 #!/usr/local/bin/lua
 
---[[
- * gzip file I/O library test script
- *
- * This file was created by Judge Maygarden (jmaygarden at computer dot org)
- * and is hereby place in the public domain
- ]]
+-----------------------------------------------------------------------------
+-- gzip file I/O library test script
+--
+-- This file was created by Judge Maygarden (jmaygarden at computer dot org)
+-- and is hereby place in the public domain
+-----------------------------------------------------------------------------
 
 require "gzio"
 
 local filename = "test.txt"
-local file
+local gzFile
 
 -- stream the text file into a gzip file
-file = assert(gzio.open(filename..".gz", "w"))
+gzFile = assert(gzio.open(filename..".gz", "w"))
 for line in io.lines(filename) do
-	file:write(line..'\n')
+	gzFile:write(line..'\n')
 end
-file:close()
+gzFile:close()
 
 -- echo the gzip file to stdout
-file = assert(gzio.open(filename, "r"), "gzio.open failed!")
-for line in file:lines() do
+gzFile = assert(gzio.open(filename, "r"), "gzio.open failed!")
+for line in gzFile:lines() do
 	print(line)
 end
-file:close()
 
--- The following functions also need to be tested
+-- rewind and do it again with gzFile:read
+gzFile:seek("set")
+print(gzFile:read("*a"))
 
---file:flush
---file:read
---file:seek
---file:setvbuf
+gzFile:close()
 
+-----------------------------------------------------------------------------
+-- The following functions also need to be tested:
+--
+--gzFile:flush
+--gzFile:setvbuf
 --gzio.close
 --gzio.flush
 --gzio.input
@@ -46,4 +49,5 @@ file:close()
 --gzio.tmpfile
 --gzio.type
 --gzio.write
+-----------------------------------------------------------------------------
 

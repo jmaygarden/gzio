@@ -72,6 +72,30 @@ static int pushresult (lua_State *L, int i, const char *filename) {
 }
 
 
+static int pushgzresult (lua_State *L, gzFile f, int i, const char *filename) {
+  int en = errno;  /* calls to Lua API may change this value */
+  int gzen;
+  const char *s;
+  if (i) {
+    lua_pushboolean(L, 1);
+    return 1;
+  }
+  else {
+    lua_pushnil(L);
+    s = gzerror(f, &gzen);
+    if (Z_ERRNO == gzen)
+      s = strerror(en);
+    if (filename)
+      lua_pushfstring(L, "%s: %s", filename, s);
+    else
+      lua_pushfstring(L, "%s", s);
+    lua_pushinteger(L, gzen);
+    lua_pushinteger(L, en);
+    return 4;
+  }
+}
+
+
 static void fileerror (lua_State *L, int arg, const char *filename) {
   lua_pushfstring(L, "%s: %s", filename, strerror(errno));
   luaL_argerror(L, arg, lua_tostring(L, -1));
@@ -342,7 +366,6 @@ static int g_read (lua_State *L, gzFile f, int first) {
   int success;
   int n;
   int errnum;
-  clearerr(f);
   if (nargs == 0) {  /* no arguments? */
     success = read_line(L, f);
     n = first+1;  /* to return 1 result */
@@ -457,10 +480,10 @@ static int f_seek (lua_State *L) {
   int op = luaL_checkoption(L, 2, "cur", modenames);
   long offset = luaL_optlong(L, 3, 0);
   op = gzseek(f, offset, mode[op]);
-  if (op)
-    return pushresult(L, 0, NULL);  /* error */
+  if (-1 == op)
+    return pushgzresult(L, f, 0, NULL);  /* error */
   else {
-    lua_pushinteger(L, gztell(f));
+    lua_pushinteger(L, op);
     return 1;
   }
 }
