@@ -11,9 +11,9 @@ LDFLAGS=-O -shared -fpic
 RM= rm -f
 LIBS= -lm $(MYLIBS)
 
-MYCFLAGS=-g
+MYCFLAGS=-g `pkg-config --cflags lua`
 MYLDFLAGS=
-MYLIBS=-lz -llua
+MYLIBS=-lz `pkg-config --libs lua`
 
 # == END OF USER SETTINGS. NO NEED TO CHANGE ANYTHING BELOW THIS LINE =========
 

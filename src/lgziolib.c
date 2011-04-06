@@ -399,7 +399,7 @@ static int g_read (lua_State *L, gzFile f, int first) {
     }
   }
   gzerror(f, &errnum);
-  if (Z_OK != errnum)
+  if (Z_OK != errnum && Z_STREAM_END != errnum)
     return pushresult(L, 0, NULL);
   if (!success) {
     lua_pop(L, 1);  /* remove last result */
