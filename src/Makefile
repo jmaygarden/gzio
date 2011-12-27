@@ -18,7 +18,7 @@ MYLIBS=-lz `pkg-config --libs lua`
 # == END OF USER SETTINGS. NO NEED TO CHANGE ANYTHING BELOW THIS LINE =========
 
 EXT=so
-GZIO_V=1.0.0
+GZIO_V=1.0.1
 GZIO_SO=	gzio.$(EXT).$(GZIO_V)
 GZIO_O= lgziolib.o
 
